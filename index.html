@@ -1,0 +1,210 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>SafeHer - Real-Time Women Security</title>
+    
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Nunito:wght@400;600;700;800;900&display=swap" rel="stylesheet">
+    <script src="https://unpkg.com/@phosphor-icons/web"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/tone/14.8.49/Tone.js"></script>
+
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    fontFamily: { sans: ['Nunito', 'sans-serif'] },
+                    colors: {
+                        bgLight: '#F8FAFC',
+                        brand: { 400: '#FF7A90', 500: '#FF4D6D', 600: '#C9184A', 700: '#800F2F' }
+                    },
+                    boxShadow: {
+                        '3d-btn-red': '0 8px 0 #C9184A, 0 15px 20px rgba(255, 77, 109, 0.3)',
+                        '3d-btn-white': '0 6px 0 #E2E8F0, 0 10px 15px rgba(0, 0, 0, 0.05)',
+                        '3d-btn-dark': '0 6px 0 #0f172a, 0 10px 15px rgba(0, 0, 0, 0.3)',
+                        '3d-card': '0 10px 30px -5px rgba(0, 0, 0, 0.08)'
+                    }
+                }
+            }
+        }
+    </script>
+    
+    <link rel="stylesheet" href="style.css">
+</head>
+<body class="text-slate-800 min-h-screen overflow-hidden flex justify-center items-center">
+
+    <div id="app-container" class="w-full lg:max-w-6xl h-[100dvh] bg-bgLight relative shadow-[0_20px_50px_rgba(0,0,0,0.2)] overflow-hidden flex flex-col lg:flex-row sm:rounded-[40px] sm:h-[95vh] sm:border-8 sm:border-slate-800">
+        
+        <div id="toast-container" class="absolute top-4 left-0 right-0 z-[100] flex flex-col items-center pointer-events-none space-y-2 px-4"></div>
+
+        <nav id="main-nav" class="hidden nav-container absolute bottom-6 left-1/2 -translate-x-1/2 w-[90%] max-w-md glass-card rounded-full shadow-3d-card justify-around items-center px-2 py-2 z-50 lg:flex-col lg:gap-8 lg:bg-white">
+            <button onclick="switchTab('dashboard')" class="w-14 h-14 rounded-full flex flex-col items-center justify-center text-brand-500 bg-brand-50 transition-colors nav-btn" data-tab="dashboard"><i class="ph-fill ph-shield-check text-2xl"></i></button>
+            <button onclick="switchTab('contacts')" class="w-14 h-14 rounded-full flex flex-col items-center justify-center text-slate-400 hover:text-slate-700 hover:bg-slate-50 transition-colors nav-btn" data-tab="contacts"><i class="ph-bold ph-users text-2xl"></i></button>
+            <button onclick="switchTab('helplines')" class="w-14 h-14 rounded-full flex flex-col items-center justify-center text-slate-400 hover:text-slate-700 hover:bg-slate-50 transition-colors nav-btn" data-tab="helplines"><i class="ph-bold ph-phone-call text-2xl"></i></button>
+        </nav>
+
+        <div class="flex-1 relative h-full w-full overflow-hidden">
+            
+            <div id="screen-splash" class="screen active flex-col h-full w-full justify-between p-8 relative overflow-hidden bg-bgLight">
+                <div class="mt-16 z-10 flex flex-col items-center max-w-sm mx-auto w-full">
+                    <div class="w-28 h-28 rounded-[32px] bg-brand-500 flex items-center justify-center btn-3d-red mb-8"><i class="ph-fill ph-shield-check text-6xl text-white"></i></div>
+                    <h1 class="text-5xl font-black tracking-tight text-slate-900 mb-3 text-center">SafeHer</h1>
+                    <p class="text-slate-500 text-center text-lg font-semibold px-4">Functional Security & SOS.</p>
+                </div>
+                <div class="z-10 w-full max-w-sm mx-auto space-y-4 mb-8">
+                    <button onclick="navigate('screen-auth')" class="w-full py-4 bg-brand-500 text-white rounded-2xl font-black text-xl btn-3d-red flex justify-center items-center gap-2">Sign In / Register</button>
+                    <button onclick="handleGuestSession()" class="w-full py-4 bg-white text-slate-700 rounded-2xl font-black text-xl btn-3d-white">Use Offline (Guest)</button>
+                </div>
+            </div>
+
+            <div id="screen-auth" class="screen flex-col h-full w-full p-6 relative z-10 bg-bgLight items-center justify-center">
+                <div class="w-full max-w-sm">
+                    <button onclick="navigate('screen-splash')" class="w-12 h-12 bg-white rounded-full flex items-center justify-center btn-3d-white mb-6 text-slate-700"><i class="ph-bold ph-caret-left text-xl"></i></button>
+                    
+                    <div class="flex gap-4 mb-6">
+                        <button id="tab-login" onclick="toggleAuthMode('login')" class="flex-1 pb-2 border-b-4 border-brand-500 font-black text-xl text-slate-900">Login</button>
+                        <button id="tab-signup" onclick="toggleAuthMode('signup')" class="flex-1 pb-2 border-b-4 border-transparent font-black text-xl text-slate-400">Register</button>
+                    </div>
+
+                    <form id="form-auth" class="space-y-5">
+                        <div class="glass-card p-2 rounded-3xl shadow-3d-card">
+                            <div class="px-4 py-2 border-b border-slate-100">
+                                <input type="email" id="auth-email" placeholder="Email Address" required class="w-full bg-transparent font-bold text-slate-800 focus:outline-none text-lg">
+                            </div>
+                            <div class="px-4 py-3">
+                                <input type="password" id="auth-password" placeholder="Password" required minlength="6" class="w-full bg-transparent font-bold text-slate-800 focus:outline-none text-lg">
+                            </div>
+                        </div>
+                        <button type="button" id="btn-auth-submit" onclick="handleAuthSubmit()" class="w-full py-4 bg-brand-500 text-white rounded-2xl font-black text-xl btn-3d-red mt-4">Login Securely</button>
+                    </form>
+                </div>
+            </div>
+
+            <div id="screen-dashboard" class="screen flex-col h-full w-full transition-colors duration-500 relative z-10">
+                <header class="px-6 py-4 flex justify-between items-center z-10 lg:px-10">
+                    <div class="flex items-center gap-3">
+                        <div class="w-10 h-10 rounded-full bg-white flex items-center justify-center shadow-sm border border-slate-200 text-brand-500"><i class="ph-fill ph-user text-xl"></i></div>
+                        <div><h1 class="font-black text-lg tracking-tight text-slate-900" id="dash-title">SafeHer</h1><p class="text-[10px] font-bold text-slate-500 uppercase tracking-wider" id="account-type-badge">Connecting...</p></div>
+                    </div>
+                    <button onclick="handleLogout()" class="w-10 h-10 bg-white rounded-full flex items-center justify-center shadow-sm border border-slate-200 text-slate-400 hover:text-brand-500 transition-colors"><i class="ph-bold ph-sign-out text-lg"></i></button>
+                </header>
+
+                <div class="content-area flex-1 overflow-y-auto px-4 pb-28 z-10 flex flex-col lg:px-10">
+                    
+                    <div id="permissions-banner" class="mb-4 p-4 glass-card rounded-2xl flex items-center justify-between cursor-pointer w-full transition-all border-l-4 border-l-amber-500" onclick="requestAllPermissions(true)">
+                        <div class="flex items-center gap-3">
+                            <div class="w-10 h-10 rounded-full bg-amber-100 flex items-center justify-center text-amber-600" id="perm-icon"><i class="ph-bold ph-shield-warning text-xl"></i></div>
+                            <div><p class="font-bold text-sm text-slate-800" id="perm-title">Action Required</p><p class="text-xs text-slate-500">Tap to enable GPS, Camera & Mic</p></div>
+                        </div>
+                        <button class="bg-slate-900 text-white px-3 py-1.5 rounded-lg text-xs font-bold shadow-md">ENABLE</button>
+                    </div>
+
+                    <div class="lg:grid lg:grid-cols-2 lg:gap-8 lg:items-center w-full mb-6">
+                        <div class="flex-1 flex flex-col justify-center items-center py-4">
+                            <button id="btn-sos" onclick="toggleSOS(false)" class="w-60 h-60 lg:w-72 lg:h-72 rounded-full bg-brand-500 btn-3d-red flex flex-col items-center justify-center relative z-20 group">
+                                <i id="sos-icon" class="ph-fill ph-warning-octagon text-[80px] lg:text-[100px] text-white drop-shadow-md mb-2 transition-transform"></i>
+                                <span id="sos-text" class="font-black text-5xl lg:text-6xl uppercase tracking-widest text-white drop-shadow-md">SOS</span>
+                            </button>
+                            <div class="flex gap-2 mt-6 w-full justify-center">
+                                <button onclick="toggleSOS(true)" class="px-5 py-3 bg-slate-800 text-white rounded-xl font-bold text-sm shadow-md flex-1 max-w-[150px] flex justify-center items-center"><i class="ph-fill ph-speaker-slash mr-2"></i> Silent</button>
+                                <button onclick="startDelayedSOS()" class="px-5 py-3 bg-orange-500 text-white rounded-xl font-bold text-sm shadow-md flex-1 max-w-[150px] flex justify-center items-center"><i class="ph-fill ph-timer mr-2"></i> 10s Delay</button>
+                            </div>
+                        </div>
+                        
+                        <div id="panel-evidence" class="hidden glass-card p-4 rounded-3xl w-full">
+                            <div class="flex justify-between items-center mb-3 px-2">
+                                <span class="font-bold text-xs text-red-600 animate-pulse flex items-center gap-1"><div class="w-2 h-2 rounded-full bg-red-600"></div> RECORDING</span>
+                                <span id="gps-status" class="text-xs font-bold text-green-600 flex items-center gap-1"><i class="ph-fill ph-navigation-arrow"></i> LIVE GPS</span>
+                            </div>
+                            <div class="relative w-full h-32 bg-black rounded-xl overflow-hidden mb-4 shadow-inner">
+                                <video id="camera-feed" class="w-full h-full object-cover opacity-90" autoplay muted playsinline></video>
+                            </div>
+                            <div class="grid grid-cols-2 gap-3">
+                                <button onclick="callPrimaryContact()" class="py-3 bg-blue-600 rounded-xl font-bold text-white text-sm shadow-md flex items-center justify-center gap-2"><i class="ph-fill ph-phone text-lg"></i> Call Help</button>
+                                <button onclick="sendEmergencySMS()" class="py-3 bg-slate-800 rounded-xl font-bold text-white text-sm shadow-md flex items-center justify-center gap-2"><i class="ph-fill ph-chat-text text-lg"></i> Send SMS</button>
+                                <button onclick="sendWhatsAppAlert()" class="py-3 bg-green-500 rounded-xl font-bold text-white text-sm shadow-md flex items-center justify-center gap-2"><i class="ph-fill ph-whatsapp-logo text-lg"></i> WhatsApp</button>
+                                <button onclick="generateLiveTrackLink()" class="py-3 bg-indigo-600 rounded-xl font-bold text-white text-sm shadow-md flex items-center justify-center gap-2"><i class="ph-bold ph-link text-lg"></i> Share Track</button>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div id="advanced-toolkit" class="w-full transition-opacity duration-300">
+                        <div class="flex items-center gap-2 mb-4 px-2 border-b border-slate-200 pb-2">
+                            <i class="ph-fill ph-toolbox text-brand-500 text-xl"></i>
+                            <h3 class="font-black text-slate-800 text-lg">Security Utilities</h3>
+                        </div>
+                        
+                        <p class="text-[10px] font-bold text-slate-500 uppercase tracking-widest mb-2 ml-2">Automated Monitors</p>
+                        <div class="grid grid-cols-4 md:grid-cols-4 gap-2 mb-6">
+                            <button onclick="toggleCrashDetection()" id="btn-crash" class="bg-white p-3 rounded-2xl shadow-sm border border-slate-100 flex flex-col items-center justify-center gap-2 text-blue-600 transition-colors"><i class="ph-fill ph-person-simple-throw text-2xl"></i><span class="font-bold text-[9px] text-center leading-tight">Fall<br>Detect</span></button>
+                            <button onclick="toggleShakeToSos()" id="btn-shake" class="bg-white p-3 rounded-2xl shadow-sm border border-slate-100 flex flex-col items-center justify-center gap-2 text-rose-600 transition-colors"><i class="ph-fill ph-vibrate text-2xl"></i><span class="font-bold text-[9px] text-center leading-tight">Shake<br>SOS</span></button>
+                            <button onclick="openCheckInModal()" id="btn-checkin" class="bg-white p-3 rounded-2xl shadow-sm border border-slate-100 flex flex-col items-center justify-center gap-2 text-emerald-600 transition-colors"><i class="ph-fill ph-clock-clockwise text-2xl"></i><span class="font-bold text-[9px] text-center leading-tight">Check-In<br>Timer</span></button>
+                            <button onclick="toggleGeofence()" id="btn-geofence" class="bg-white p-3 rounded-2xl shadow-sm border border-slate-100 flex flex-col items-center justify-center gap-2 text-cyan-600 transition-colors"><i class="ph-fill ph-anchor text-2xl"></i><span class="font-bold text-[9px] text-center leading-tight">Safe<br>Anchor</span></button>
+                        </div>
+
+                        <p class="text-[10px] font-bold text-slate-500 uppercase tracking-widest mb-2 ml-2">Hardware & Capture</p>
+                        <div class="grid grid-cols-4 md:grid-cols-4 gap-2 mb-6">
+                            <button onclick="toggleHardwareTorch()" id="btn-torch" class="bg-white p-3 rounded-2xl shadow-sm border border-slate-100 flex flex-col items-center justify-center gap-2 text-yellow-500 transition-colors"><i class="ph-fill ph-flashlight text-2xl"></i><span class="font-bold text-[9px] text-center leading-tight">LED<br>Torch</span></button>
+                            <button onclick="toggleAudioRecorder()" id="btn-audio-rec" class="bg-white p-3 rounded-2xl shadow-sm border border-slate-100 flex flex-col items-center justify-center gap-2 text-purple-600 transition-colors"><i class="ph-fill ph-microphone text-2xl"></i><span class="font-bold text-[9px] text-center leading-tight">Record<br>Mic</span></button>
+                            <button onclick="toggleVideoRecorder()" id="btn-video-rec" class="bg-white p-3 rounded-2xl shadow-sm border border-slate-100 flex flex-col items-center justify-center gap-2 text-red-600 transition-colors"><i class="ph-fill ph-video-camera text-2xl"></i><span class="font-bold text-[9px] text-center leading-tight">Record<br>Camera</span></button>
+                            <button onclick="quickSharePhoto()" class="bg-white p-3 rounded-2xl shadow-sm border border-slate-100 flex flex-col items-center justify-center gap-2 text-teal-600 transition-colors"><i class="ph-fill ph-camera text-2xl"></i><span class="font-bold text-[9px] text-center leading-tight">Snap &<br>Share</span></button>
+                        </div>
+
+                        <p class="text-[10px] font-bold text-slate-500 uppercase tracking-widest mb-2 ml-2">Utilities & Location</p>
+                        <div class="grid grid-cols-4 md:grid-cols-4 gap-2 mb-6">
+                            <button onclick="toggleVoiceTrigger()" id="btn-voice-trigger" class="bg-white p-3 rounded-2xl shadow-sm border border-slate-100 flex flex-col items-center justify-center gap-2 text-indigo-600 transition-colors"><i class="ph-fill ph-waveform text-2xl" id="icon-voice"></i><span class="font-bold text-[9px] text-center leading-tight">Voice<br>Trigger</span></button>
+                            <button onclick="speakLocation()" class="bg-white p-3 rounded-2xl shadow-sm border border-slate-100 flex flex-col items-center justify-center gap-2 text-pink-500 transition-colors"><i class="ph-fill ph-megaphone text-2xl"></i><span class="font-bold text-[9px] text-center leading-tight">Yell<br>Location</span></button>
+                            <button onclick="playWhistle()" id="btn-whistle" class="bg-white p-3 rounded-2xl shadow-sm border border-slate-100 flex flex-col items-center justify-center gap-2 text-sky-500 transition-colors"><i class="ph-fill ph-speaker-hifi text-2xl"></i><span class="font-bold text-[9px] text-center leading-tight">Loud<br>Whistle</span></button>
+                            <button onclick="toggleWakeLock()" id="btn-wakelock" class="bg-white p-3 rounded-2xl shadow-sm border border-slate-100 flex flex-col items-center justify-center gap-2 text-amber-600 transition-colors"><i class="ph-fill ph-sun text-2xl"></i><span class="font-bold text-[9px] text-center leading-tight">Keep<br>Awake</span></button>
+                        </div>
+
+                        <p class="text-[10px] font-bold text-slate-500 uppercase tracking-widest mb-2 ml-2">External Help</p>
+                        <div class="grid grid-cols-4 md:grid-cols-4 gap-2">
+                            <button onclick="findNearest('police station')" class="bg-white p-3 rounded-2xl shadow-sm border border-slate-100 flex flex-col items-center justify-center gap-2 text-slate-800 transition-colors"><i class="ph-fill ph-shield-star text-2xl"></i><span class="font-bold text-[9px] text-center leading-tight">Find<br>Police</span></button>
+                            <button onclick="findNearest('hospital')" class="bg-white p-3 rounded-2xl shadow-sm border border-slate-100 flex flex-col items-center justify-center gap-2 text-red-500 transition-colors"><i class="ph-fill ph-first-aid text-2xl"></i><span class="font-bold text-[9px] text-center leading-tight">Find<br>Hospital</span></button>
+                            <button onclick="openIncidentLog()" class="bg-white p-3 rounded-2xl shadow-sm border border-slate-100 flex flex-col items-center justify-center gap-2 text-orange-600 transition-colors"><i class="ph-fill ph-notebook text-2xl"></i><span class="font-bold text-[9px] text-center leading-tight">Diary<br>Log</span></button>
+                            <button onclick="toggleStealthMode()" id="btn-stealth" class="bg-slate-800 p-3 rounded-2xl shadow-sm border border-slate-700 flex flex-col items-center justify-center gap-2 text-white transition-colors"><i class="ph-fill ph-moon text-2xl"></i><span class="font-bold text-[9px] text-center leading-tight">Stealth<br>Mode</span></button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div id="screen-contacts" class="screen flex-col h-full w-full bg-bgLight z-10 relative pb-28">
+                <header class="px-6 pt-8 pb-4 flex justify-between items-center"><h1 class="font-black text-2xl tracking-tight text-slate-900">Emergency Contacts</h1><button onclick="openAddContactModal()" class="w-12 h-12 rounded-full bg-brand-500 text-white btn-3d-red flex items-center justify-center"><i class="ph-bold ph-plus text-xl"></i></button></header>
+                <div class="content-area flex-1 overflow-y-auto px-6 max-w-5xl mx-auto w-full">
+                    <p class="text-sm text-slate-500 mb-4 font-bold">These contacts will receive your SOS SMS.</p>
+                    <div id="contacts-list" class="grid grid-cols-1 gap-3"></div>
+                </div>
+            </div>
+
+            <div id="screen-helplines" class="screen flex-col h-full w-full bg-bgLight z-10 relative pb-28">
+                <header class="px-6 pt-8 pb-4"><h1 class="font-black text-2xl tracking-tight text-slate-900">National Helplines</h1></header>
+                <div class="content-area flex-1 overflow-y-auto px-6 max-w-5xl mx-auto w-full space-y-3">
+                    <button onclick="window.location.href='tel:112'" class="w-full glass-card p-5 rounded-2xl shadow-sm flex justify-between items-center border-l-8 border-red-500 active:scale-95 transition-transform"><div class="text-left"><p class="font-black text-lg">National Emergency</p><p class="text-xs text-slate-500">All-in-one emergency</p></div><div class="bg-red-500 text-white font-black px-4 py-2 rounded-xl text-xl">112</div></button>
+                    <button onclick="window.location.href='tel:1091'" class="w-full glass-card p-5 rounded-2xl shadow-sm flex justify-between items-center border-l-8 border-brand-500 active:scale-95 transition-transform"><div class="text-left"><p class="font-black text-lg">Women Helpline</p><p class="text-xs text-slate-500">Domestic abuse, safety</p></div><div class="bg-brand-500 text-white font-black px-4 py-2 rounded-xl text-xl">1091</div></button>
+                    <button onclick="window.location.href='tel:100'" class="w-full glass-card p-5 rounded-2xl shadow-sm flex justify-between items-center border-l-8 border-blue-500 active:scale-95 transition-transform"><div class="text-left"><p class="font-black text-lg">Police Control Room</p><p class="text-xs text-slate-500">Immediate police dispatch</p></div><div class="bg-blue-600 text-white font-black px-4 py-2 rounded-xl text-xl">100</div></button>
+                    <button onclick="window.location.href='tel:108'" class="w-full glass-card p-5 rounded-2xl shadow-sm flex justify-between items-center border-l-8 border-green-500 active:scale-95 transition-transform"><div class="text-left"><p class="font-black text-lg">Ambulance</p><p class="text-xs text-slate-500">Medical emergencies</p></div><div class="bg-green-500 text-white font-black px-4 py-2 rounded-xl text-xl">108</div></button>
+                </div>
+            </div>
+
+            <div id="overlay-auto-sos" class="fixed inset-0 bg-red-600/95 backdrop-blur-md z-[300] hidden flex-col justify-center items-center px-6">
+                <i class="ph-fill ph-warning-octagon text-7xl text-white animate-pulse mb-6"></i>
+                <h2 class="text-2xl font-black text-white text-center uppercase tracking-widest mb-2" id="auto-sos-reason">Sensor Triggered</h2>
+                <p class="text-white/80 font-bold mb-4 text-center">SOS will activate automatically.</p>
+                <div class="text-[120px] font-black text-white leading-none mb-12 animate-ping-slow" id="auto-sos-timer-text">10</div>
+                <button onclick="cancelAutoSos()" class="w-full max-w-xs py-5 bg-white text-red-600 rounded-2xl font-black text-2xl btn-3d-white">I'M SAFE (CANCEL)</button>
+            </div>
+
+            <div id="overlay-stealth" class="fixed inset-0 bg-black z-[500] hidden flex-col justify-center items-center cursor-pointer" onclick="exitStealthMode()"></div>
+
+            <div id="modal-container" class="fixed inset-0 bg-slate-900/70 backdrop-blur-sm z-[200] hidden items-center justify-center p-4">
+                <div class="bg-white w-full max-w-sm rounded-3xl p-6 shadow-2xl relative max-h-[80vh] overflow-y-auto" id="modal-content"></div>
+            </div>
+
+        </div>
+    </div>
+
+    <script type="module" src="app.js"></script>
+</body>
+</html>

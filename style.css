@@ -1,0 +1,23 @@
+body { font-family: 'Nunito', sans-serif; -webkit-tap-highlight-color: transparent; background-color: #E2E8F0; }
+.screen { display: none; }
+.screen.active { display: flex; }
+::-webkit-scrollbar { display: none; }
+
+.btn-3d-red { box-shadow: 0 8px 0 #C9184A, 0 15px 20px rgba(255, 77, 109, 0.4); transform: translateY(0); transition: all 0.15s ease; }
+.btn-3d-red:active { box-shadow: 0 0 0 #C9184A, 0 5px 10px rgba(255, 77, 109, 0.4); transform: translateY(8px); }
+.btn-3d-white { box-shadow: 0 6px 0 #CBD5E1, 0 10px 15px rgba(0, 0, 0, 0.05); transform: translateY(0); transition: all 0.15s ease; }
+.btn-3d-white:active { box-shadow: 0 0 0 #CBD5E1, 0 5px 10px rgba(0, 0, 0, 0.05); transform: translateY(6px); }
+.btn-3d-dark { box-shadow: 0 6px 0 #0f172a, 0 10px 15px rgba(0, 0, 0, 0.3); transform: translateY(0); transition: all 0.15s ease; }
+.btn-3d-dark:active { box-shadow: 0 0 0 #0f172a, 0 5px 10px rgba(0, 0, 0, 0.3); transform: translateY(6px); }
+
+.glass-card { background: rgba(255, 255, 255, 0.95); backdrop-filter: blur(10px); border: 1px solid rgba(255,255,255,0.5); }
+.sos-active-bg { background: #FF4D6D !important; transition: background 0.3s ease; }
+.stealth-bg { background: #000000 !important; color: #111 !important; transition: all 0.3s ease; }
+
+@media (min-width: 1024px) {
+    .nav-container { position: relative !important; width: 100px !important; height: 100% !important; flex-direction: column !important; justify-content: center !important; border-radius: 0 !important; box-shadow: none !important; border-right: 2px solid #E2E8F0 !important; transform: none !important; left: 0 !important; bottom: 0 !important; background: white !important; }
+    .content-area { padding-bottom: 2rem !important; }
+}
+
+.strobe-bg { animation: strobe 0.1s infinite; }
+@keyframes strobe { 0%, 100% { background-color: white; } 50% { background-color: black; } }
